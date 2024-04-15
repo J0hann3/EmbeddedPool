@@ -4,7 +4,7 @@ CFLAGS=-mmcu=atmega328p -D F_CPU=16000000
 all: hex flash
 DDRBDDRB
 hex:
-	$(CC) $(CFLAGS) -c main.c -o main.bin
+	$(CC) $(CFLAGS) main.c -o main.bin
 	avr-objcopy -O ihex main.bin main.hex
 
 flash:
