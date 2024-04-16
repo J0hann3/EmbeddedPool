@@ -1,14 +1,33 @@
 CC=avr-gcc
-CFLAGS=-mmcu=atmega328p -D F_CPU=16000000
+CFLAGS=-mmcu=atmega328p -D F_CPU=16000000 -Os -MMD
+
+NAME=main
+
+SRC=main.c
+
+OBJ=$(SRC:.c=.o)
+
+HEADER = $(patsubst %.o,%.d, $(OBJ))
 
 all: hex flash
-DDRBDDRB
-hex:
-	$(CC) $(CFLAGS) main.c -o main.bin
-	avr-objcopy -O ihex main.bin main.hex
+
+-include $(HEADER)
+
+hex: $(NAME).hex
+
+$(NAME).hex: $(OBJ)
+	$(CC) $(CFLAGS) $(OBJ) -o $(NAME).bin
+	avr-objcopy -O ihex $(NAME).bin $(NAME).hex
+
+%.o: %.c Makefile
+	$(CC) $(CFLAGS) -c $< -o $@
 
 flash:
-	avrdude -p m328p -c arduino -P /dev/ttyUSB0 -b 115200 -e -u -U flash:w:main.hex:i
+	avrdude -p m328p -c arduino -P /dev/ttyUSB0 -b 115200 -u -U flash:w:$(NAME).hex:i
 
 clean:
-	rm main.bin main.hex
+	rm -rf $(NAME).bin $(NAME).hex
+	rm -rf $(OBJ)
+	rm -rf $(HEADER)
+
+.PHONY : clean all hex flash clean
