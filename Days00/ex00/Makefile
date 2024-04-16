@@ -1,5 +1,5 @@
 CC=avr-gcc
-CFLAGS=-mmcu=atmega328p -D F_CPU=16000000 -Os -MMD
+CFLAGS=-mmcu=atmega328p -D F_CPU=16000000 -MMD
 
 NAME=main
 
@@ -22,7 +22,7 @@ $(NAME).hex: $(OBJ)
 %.o: %.c Makefile
 	$(CC) $(CFLAGS) -c $< -o $@
 
-flash:
+flash: hex
 	avrdude -p m328p -c arduino -P /dev/ttyUSB0 -b 115200 -u -U flash:w:$(NAME).hex:i
 
 clean:

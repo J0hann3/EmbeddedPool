@@ -21,7 +21,7 @@ static int _increment(int value)
 	if (value + 1 > MAX_4_BITS)
 		return MAX_4_BITS;
 	value++;
-	int res = PORTB & ~LIGHT_BITS; //save date other then the 4 lights
+	int res = PORTB & ~LIGHT_BITS; //save data other than the 4 lights
 	res |= (value & BIT_1) | (value & BIT_2) | (value & BIT_3) | ((value & BIT_4) << 1); // add value of the 4 lights to the variable
 	PORTB = res; //set the light according to the value
 	return (value);
