@@ -7,8 +7,8 @@
 # include <util/delay.h>
 # include <avr/interrupt.h>
 
-# define SET(PORT, N) (PORT |= (1 << N))
-# define RESET(PORT, N) (PORT &= ~(1 << N))
-# define TOGGLE(PORT, N) (PORT ^= (1 << N))
+# define SET(PORT, N) ((PORT) |= (1 << (N)))
+# define RESET(PORT, N) ((PORT) &= ~(1 << (N)))
+# define TOGGLE(PORT, N) ((PORT) ^= (1 << (N)))
 
 #endif
