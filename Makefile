@@ -27,8 +27,10 @@ $(NAME).hex: $(OBJ)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 flash:
+	avrdude -p m328p -c arduino -P /dev/ttyUSB1 -b $(UART_BAUDRATE) -u -U flash:w:$(NAME).hex:i
+	terminator -e 'screen -S ex00 /dev/ttyUSB1 $(UART_BAUDRATE)'&
 	avrdude -p m328p -c arduino -P /dev/ttyUSB0 -b $(UART_BAUDRATE) -u -U flash:w:$(NAME).hex:i
-	screen -S ex00 /dev/ttyUSB0 $(UART_BAUDRATE)
+	screen -S ex01 /dev/ttyUSB0 $(UART_BAUDRATE)
 
 clean:
 	rm -rf $(NAME).bin $(NAME).hex

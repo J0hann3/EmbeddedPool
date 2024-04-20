@@ -19,7 +19,7 @@ uint8_t i2c_start(uint8_t read, uint8_t address)
 	if (TW_STATUS != TW_START) //check status code == start
 	{
 		uart_printstr("ERROR START");
-		return 1;
+		return TW_STATUS;
 	}
 	// read address of slave into register
 	TWDR = (address << 1) + read;
@@ -32,7 +32,7 @@ uint8_t i2c_start(uint8_t read, uint8_t address)
 		|| (TW_STATUS != TW_MR_SLA_ACK && read))
 	{
 		uart_printstr("ERROR SLAVE ACK");
-		return 1;
+		return TW_STATUS;
 	}
 	return 0;
 }
