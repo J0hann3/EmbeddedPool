@@ -1,6 +1,8 @@
 #include "tool.h"
-#include "util/twi.h"
+#include <util/twi.h>
+#include <stdlib.h>
 #include "uart.h"
+
 
 void print_hex_value();
 
@@ -114,18 +116,59 @@ unsigned char i2c_read(uint8_t ack)
 	return c;
 }
 
+void print_value(float temp, float hum)
+{
+	static float tab_temp[3] = {0};
+	static float tab_hum[3] = {0};
+	static uint8_t index = 0;
+
+	tab_temp[index] = temp;
+	tab_hum[index] = hum;
+
+	if (index == 2)
+	{
+		index = 0;
+
+		temp = (tab_temp[0] + tab_temp[1] + tab_temp[2]) / 3;
+		hum = (tab_hum[0] + tab_hum[1] + tab_hum[2]) / 3;
+		char temp_str[5];
+		char hum_str[7];
+
+		dtostrf(temp, 4, 2, temp_str);
+		dtostrf(hum, 6, 3, hum_str);
+		uart_printstr("Temperature: ");
+		uart_printstr(temp_str);
+		uart_printstr("°C, Humidity: ");
+		uart_printstr(hum_str);
+		uart_printstr("%\r\n");
+		return ;
+	}
+	index++;
+}
+
 void print_hex_value()
 {
-	volatile uint8_t index = 0;
+	uint8_t index = 0;
+	uint32_t temperature = 0;
+	uint32_t humidity = 0;
 
 	while(index < 6)
 	{
 		uint8_t c = i2c_read(index != 5);
-		uart_printhex(c);
-		uart_tx(' ');
+		if (index == 1 || index == 2)
+			humidity = (humidity << 8) | c;
+		else if (index == 3)
+		{
+			humidity = (humidity << 4) | (c >> 4);
+			temperature = c & 0x0f;
+		}
+		else if (index == 4 || index == 5)
+			temperature = (temperature << 8) | c;
 		index++;
 	}
-	uart_printstr("\r\n");
+	float temp_f = temperature / 1048576. * 200. - 50.;
+	float hum_f = humidity / 1048576. * 100.;
+	print_value(temp_f, hum_f);
 }
 
 void reset_sensor()
@@ -143,7 +186,6 @@ void calibre_sensor()
 	i2c_start(TW_READ);
 	_delay_ms(100);
 	volatile unsigned char c = i2c_read(0);
-	// uart_printhex(c);
 	i2c_stop();
 	_delay_ms(100);
 
