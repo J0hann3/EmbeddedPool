@@ -1,3 +1,4 @@
+#include "tool.h"
 #include "i2c.h"
 
 void i2c_init(void)
@@ -72,7 +73,7 @@ void i2c_stop(void)
 	// uart_printstr("Stop connection ...\r\n");
 }
 
-void i2c_write(unsigned char data)
+uint8_t i2c_write(unsigned char data)
 {
 	TWDR = data;
 	TWCR = (1<<TWINT) | (1<<TWEN);
@@ -81,11 +82,7 @@ void i2c_write(unsigned char data)
 	{}
 
 	// uart_printstr("Write data ...\r\n");
-	if (TW_STATUS != TW_MT_DATA_ACK)
-	{
-		uart_printstr("T ERROR DATA ACK");
-		return ;
-	}
+	return TW_STATUS;
 }
 
 unsigned char i2c_read(uint8_t ack)

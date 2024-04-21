@@ -2,10 +2,12 @@
 #include "i2c.h"
 #include "uart.h"
 
-#define ADDRESS 0x08
+#define ADDRESS 0x18
+#define BUTTON_PRESS 0x10
 
 void init_slave();
-void i2c_start_slave(uint8_t read);
+void slave_mode();
+void master_mode();
 void init_LED_SW1();
 
 int main()
@@ -17,21 +19,9 @@ int main()
 	while(1)
 	{
 		if ((PIND & (1 << PD2)) == 0) //switch press == MASTER
-		{
-			uart_printstr("Being matser ... \r\n");
-			uart_printhex(i2c_start(TW_WRITE, ADDRESS));
-			_delay_ms(5000);
-		}
-		else if (!(TWCR & (1 << TWINT))) //SLAVE mode
-		{
-			// if (TWDR == TWAR << 1)
-				i2c_start_slave(TW_WRITE);
-			// else if (TWDR == (TWAR << 1) + 1)
-			// 	i2c_start_slave(TW_READ);
-			// else
-			// 	uart_printstr("request on bad address\r\n");
-		}
-
+			master_mode();
+		else if (TW_STATUS == TW_SR_SLA_ACK) //SLAVE mode
+			slave_mode();
 	}
 }
 
@@ -47,15 +37,42 @@ void init_LED_SW1()
 
 void init_slave()
 {
-	TWAR = ADDRESS;
-	TWCR = (1 << TWEA) | (1 << TWEN);
+	TWAR = ADDRESS << 1;
+	TWCR = (1 << TWEN) | (1 << TWEA);
 }
 
-void i2c_start_slave(uint8_t read)
+void slave_mode()
 {
+	SET(PORTB, PB4);
 	uart_printstr("Start slave ...\r\n");
-	// SET(TWCR, TWINT);
-	uart_printhex(TW_STATUS);
+	uint8_t is_press = 0;
+	while(1)
+	{
+		if ((PIND & (1 << PD2)) == 0)
+		{
+			TWCR = (1 << TWEN) | (1 << TWEA) | (1 << TWINT);
+			is_press = 1;
+		}
+		else
+			TWCR = (1 << TWEN) | (1 << TWINT);
+		unsigned char c = TWDR;
+		if (is_press == 1)
+			break;
+	}
+	SET(PORTB, PB2);
 	_delay_ms(5000);
+}
 
+void master_mode()
+{
+	SET(PORTB, PB0);
+	uart_printstr("Being matser ... \r\n");
+	i2c_start(TW_WRITE, ADDRESS);
+	while(1)	//check press button of slave
+	{
+		if (i2c_write(BUTTON_PRESS) == TW_MT_SLA_ACK)
+			break ;
+	}
+	SET(PORTB, PB2);
+	_delay_ms(5000);
 }
