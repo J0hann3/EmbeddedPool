@@ -34,7 +34,7 @@ int main()
 	init_timer();
 	while(1)
 	{
-
+		uart_printstr("wait state\r\n");
 		if ((PIND & (1 << PD2)) == 0) //switch press == MASTER
 		{
 			master_mode();
@@ -48,6 +48,27 @@ int main()
 			init_slave();
 		}
 	}
+}
+
+void set_red_light()
+{
+	RESET(PORTD, PD3);
+	SET(PORTD, PD5);
+	RESET(PORTD, PD6);
+}
+
+void set_green_light()
+{
+	RESET(PORTD, PD3);
+	RESET(PORTD, PD5);
+	SET(PORTD, PD6);
+}
+
+void set_blue_light()
+{
+	SET(PORTD, PD3);
+	RESET(PORTD, PD5);
+	RESET(PORTD, PD6);
 }
 
 void set_light()
@@ -131,19 +152,26 @@ uint8_t light_countdown_slave()
 				uart_printhex(c);
 				uart_printstr(" d5 ");
 				in_game = 1;
-				RESET(PORTD, PD3);
-				RESET(PORTD, PD5);
-				SET(PORTD, PD6);
+				set_green_light();
+				break;
+			case WINNER:
+				uart_printstr("winner ");
+				set_light();
+				is_press = 1;
+				in_game = 1;
+				TWCR = (1 << TWEN) | (1 << TWEA) | (1 << TWINT);
+				while (!(TWCR & (1 << TWINT)))
+				{}
 				break;
 			default:
 				break;
 		}
 		uart_printhex(TW_STATUS);
 		uart_printstr("\r\n");
-		if ((is_press == 1 && in_game == 0) || TW_STATUS == TW_SR_STOP)
-			return LOSER;
-		else if(is_press == 1 && in_game == 1)
+		if(is_press == 1 && in_game == 1)
 			return WINNER;
+		else if ((is_press == 1 && in_game == 0) || TW_STATUS == TW_SR_STOP)
+			return LOSER;
 	}
 }
 
@@ -164,13 +192,16 @@ void slave_mode()
 		while (!(TWCR & (1 << TWINT))) //wait for ack of the slave
 		{}
 		unsigned char c = TWDR;
+		uart_printhex(TW_STATUS);
 		if (is_press == 1)
 			break;
 	}
-	SET(PORTD, PD3);
+	set_blue_light();
 	init_slave();
 	while (!(TWCR & (1 << TWINT)) && TW_STATUS != TW_SR_SLA_ACK)
-	{}
+	{
+		uart_printhex(TW_STATUS);
+	}
 	_delay_ms(1000);
 	uart_printstr("restart");
 	end_game(light_countdown_slave());
@@ -200,9 +231,11 @@ uint8_t stair_leds() {
 			for (volatile uint32_t i = 0; i < 45000; i++)
 			{
 				if ((PIND & (1 << PD2)) == 0)
+				{
+					set_light();
 					return LOSER;
+				}
 			}
-			// _delay_ms(100);
 			if (i == 3)
 				i++;
 			uint8_t status = i2c_write(LED_D1 + i);
@@ -215,9 +248,7 @@ uint8_t stair_leds() {
 	}
 	if(i2c_write(GREEN_LED) == TW_MT_DATA_NACK)
 		return WINNER;
-	RESET(PORTD, PD3);
-	RESET(PORTD, PD5);
-	SET(PORTD, PD6);
+	set_green_light();
 	return CONTINUE;
 }
 
@@ -243,24 +274,16 @@ void end_game(uint8_t res)
 	if (res == WINNER)
 	{
 		uart_printstr("winner\r\n");
-		SET(PORTD, PD3);
-		RESET(PORTD, PD5);
-		RESET(PORTD, PD6);
+		set_blue_light();
 		_delay_ms(500);
-		RESET(PORTD, PD3);
-		RESET(PORTD, PD5);
-		SET(PORTD, PD6);
+		set_green_light();
 	}
 	if (res == LOSER)
 	{
 		uart_printstr("loser\r\n");
-		SET(PORTD, PD3);
-		RESET(PORTD, PD5);
-		RESET(PORTD, PD6);
+		set_blue_light();
 		_delay_ms(500);
-		RESET(PORTD, PD3);
-		SET(PORTD, PD5);
-		RESET(PORTD, PD6);
+		set_red_light();
 	}
 }
 
@@ -274,7 +297,7 @@ void master_mode()
 		if (status == TW_MT_DATA_NACK)
 			break ;
 	}
-	SET(PORTD, PD3);
+	set_blue_light();
 	i2c_stop();
 	_delay_ms(100);
 	i2c_start(TW_WRITE, ADDRESS);
@@ -282,6 +305,8 @@ void master_mode()
 	uint8_t res = stair_leds();
 	if (res == CONTINUE)
 		res = check_button();
+	else if (res == LOSER)
+		i2c_write(WINNER);
 	uart_printstr("finish\r\n");
 	i2c_stop();
 	end_game(res);
