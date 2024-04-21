@@ -20,7 +20,7 @@ int main()
 	{
 		if ((PIND & (1 << PD2)) == 0) //switch press == MASTER
 			master_mode();
-		else if (TW_STATUS == TW_SR_SLA_ACK) //SLAVE mode
+		else if ((TWCR & (1 << TWINT)) && TW_STATUS == TW_SR_SLA_ACK) //SLAVE mode
 			slave_mode();
 	}
 }
@@ -50,11 +50,13 @@ void slave_mode()
 	{
 		if ((PIND & (1 << PD2)) == 0)
 		{
-			TWCR = (1 << TWEN) | (1 << TWEA) | (1 << TWINT);
+			TWCR = (1 << TWEN) | (1 << TWINT);
 			is_press = 1;
 		}
 		else
-			TWCR = (1 << TWEN) | (1 << TWINT);
+			TWCR = (1 << TWEN) | (1 << TWEA) | (1 << TWINT);
+		while (!(TWCR & (1 << TWINT))) //wait for ack of the slave
+		{}
 		unsigned char c = TWDR;
 		if (is_press == 1)
 			break;
@@ -70,9 +72,12 @@ void master_mode()
 	i2c_start(TW_WRITE, ADDRESS);
 	while(1)	//check press button of slave
 	{
-		if (i2c_write(BUTTON_PRESS) == TW_MT_SLA_ACK)
+		uint8_t status = i2c_write(BUTTON_PRESS);
+		if (status == TW_MT_DATA_NACK)
 			break ;
 	}
 	SET(PORTB, PB2);
+	i2c_stop();
+	i2c_start(TW_WRITE, ADDRESS);
 	_delay_ms(5000);
 }
