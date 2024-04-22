@@ -6,6 +6,7 @@
 # include <avr/io.h>
 # include <util/delay.h>
 # include <avr/interrupt.h>
+# include <stdlib.h>
 
 # define SET(PORT, N) ((PORT) |= (1 << (N)))
 # define RESET(PORT, N) ((PORT) &= ~(1 << (N)))

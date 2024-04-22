@@ -7,7 +7,9 @@ NAME=main
 
 SRC=main.c \
 	uart.c \
-	i2c.c
+	i2c.c \
+	slave.c \
+	master.c
 
 OBJ=$(SRC:.c=.o)
 

@@ -1,7 +1,6 @@
 #ifndef I2C_H
 # define I2C_H
 # include <util/twi.h>
-# include <stdlib.h>
 # include "uart.h"
 
 void i2c_init(void);
