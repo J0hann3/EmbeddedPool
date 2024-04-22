@@ -10,13 +10,14 @@ void i2c_init(void)
 	// SCLf = F_CPU / (16 + 2 *(TWBR) * prescaler)
 	// (TWBR) = (F_CPU / SCLf - 16) /2 / prescaler = 72 and prescaler = 1
 	TWBR = 72;
+	//Prescale of 1
 	RESET(TWSR, TWPS0);
 	RESET(TWSR, TWPS1);
 }
 
 uint8_t i2c_start(uint8_t read)
 {
-	TWCR = (1<<TWINT) | (1<<TWSTA) | (1<<TWEN);
+	TWCR = (1<<TWINT) | (1<<TWSTA) | (1<<TWEN); // set start flag + enable TWI + clear TWINT
 	while (!(TWCR & (1 << TWINT))) //wait for transmittion of START
 	{}
 	// uart_printstr("Start...\r\n");
@@ -27,13 +28,13 @@ uint8_t i2c_start(uint8_t read)
 	}
 	// read address of slave into register
 	TWDR = (0x38 << 1) + read;
-	TWCR = (1<<TWINT) | (1<<TWEN);
+	TWCR = (1<<TWINT) | (1<<TWEN); // clear Flag for new action
 	while (!(TWCR & (1 << TWINT))) //wait for ack of the slave
 	{}
 
 	// uart_printstr("Bind address ...\r\n");
 	if ((TW_STATUS != TW_MT_SLA_ACK && !read)
-		|| (TW_STATUS != TW_MR_SLA_ACK && read))
+		|| (TW_STATUS != TW_MR_SLA_ACK && read)) //check status
 	{
 		uart_printstr("ERROR SLAVE ACK");
 		return 1;
@@ -43,26 +44,25 @@ uint8_t i2c_start(uint8_t read)
 
 uint8_t i2c_restart(uint8_t read)
 {
-	TWCR = (1<<TWINT) | (1<<TWSTA) | (1<<TWEN);
-
+	TWCR = (1<<TWINT) | (1<<TWSTA) | (1<<TWEN); // set start flag + enable TWI + clear TWINT
 	while (!(TWCR & (1 << TWINT))) //wait for transmittion of RESTART
 	{}
 	// uart_printstr("Restart...\r\n");
-	if (TW_STATUS != TW_REP_START) //check status code == start
+	if (TW_STATUS != TW_REP_START) //check status code == restart
 	{
 		uart_printstr("ERROR RESTART");
 		return 1;
 	}
 	// read address of slave into register
 	TWDR = (0x38 << 1) + read;
-	TWCR = (1<<TWINT) | (1<<TWEN);
+	TWCR = (1<<TWINT) | (1<<TWEN); // clear Flag for new action
 
 	while (!(TWCR & (1 << TWINT)))
 	{}
 
 	// uart_printstr("Bind address ...\r\n");
 	if ((TW_STATUS != TW_MT_SLA_ACK && !read)
-		|| (TW_STATUS != TW_MR_SLA_ACK && read))
+		|| (TW_STATUS != TW_MR_SLA_ACK && read)) //check status
 	{
 		uart_printstr("ERROR SLAVE ACK");
 		return 1;
@@ -72,14 +72,14 @@ uint8_t i2c_restart(uint8_t read)
 
 void i2c_stop(void)
 {
-	TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWSTO);
+	TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWSTO);  //set flag to stop i2c
 	// uart_printstr("Stop connection ...\r\n");
 }
 
 void i2c_write(unsigned char data)
 {
-	TWDR = data;
-	TWCR = (1<<TWINT) | (1<<TWEN);
+	TWDR = data; //write data
+	TWCR = (1<<TWINT) | (1<<TWEN); //clear flag
 
 	while (!(TWCR & (1 << TWINT))) //wait for ack of the slave
 	{}
@@ -96,16 +96,16 @@ unsigned char i2c_read(uint8_t ack)
 {
 	volatile unsigned char c;
 	if (ack == 1)
-		TWCR = (1<<TWINT) | (1<<TWEA) | (1<<TWEN);
+		TWCR = (1<<TWINT) | (1<<TWEA) | (1<<TWEN); // set flag with ack
 	else
-		TWCR = (1<<TWINT) | (1<<TWEN);
+		TWCR = (1<<TWINT) | (1<<TWEN); //set flag with nack
 
 	while (!(TWCR & (1 << TWINT))) //wait for ack of the slave
 	{}
 	c = TWDR;
 
 	if ((TW_STATUS != TW_MR_DATA_ACK && ack)
-		|| (TW_STATUS != TW_MR_DATA_NACK && !ack))
+		|| (TW_STATUS != TW_MR_DATA_NACK && !ack)) // check status
 	{
 		uart_printstr("T ERROR DATA ACK");
 		return 0xff;
@@ -120,7 +120,7 @@ void print_hex_value()
 
 	while(index < 6)
 	{
-		uint8_t c = i2c_read(index != 5);
+		uint8_t c = i2c_read(index != 5); // read the 5 valus of the sensor
 		uart_printhex(c);
 		uart_tx(' ');
 		index++;
@@ -143,7 +143,6 @@ void calibre_sensor()
 	i2c_start(TW_READ);
 	_delay_ms(100);
 	volatile unsigned char c = i2c_read(0);
-	// uart_printhex(c);
 	i2c_stop();
 	_delay_ms(100);
 
@@ -171,14 +170,14 @@ int main()
 		_delay_ms(100);
 		i2c_start(TW_WRITE);
 		_delay_ms(100);
-		i2c_write(0xAC);
+		i2c_write(0xAC); //send command to the sensor
 		i2c_write(0x33);
 		i2c_write(0x00);
 		i2c_stop();
 		_delay_ms(200);
 		i2c_start(TW_READ);
 		_delay_ms(100);
-		print_hex_value();
+		print_hex_value(); // read command receive
 		_delay_ms(500); //wait
 		i2c_stop();
 	}
