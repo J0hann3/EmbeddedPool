@@ -92,7 +92,6 @@ uint8_t convert_hex(char c1, char c2)
 		res += c2 - 'A' + 10;
 	return res;
 }
-// coucou \o/
 
 void convert_input(char *buffer)
 {

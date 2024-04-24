@@ -56,10 +56,12 @@ void white_led()
 
 int main()
 {
+	//set led rgb to output
 	SET(DDRD, PD3);
 	SET(DDRD, PD5);
 	SET(DDRD, PD6);
 
+	//reset all the led rgb
 	RESET(PORTD, PD3);
 	RESET(PORTD, PD5);
 	RESET(PORTD, PD6);

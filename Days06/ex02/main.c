@@ -7,11 +7,11 @@
 
 static void _init_timer0()
 {
-	//clear the light on match with OCR0A and set the light on BOTTOM
+	//clear the light green on match with OCR0A and set the light on BOTTOM
 	RESET(TCCR0A, COM0A0);
 	SET(TCCR0A, COM0A1);
 
-	//clear the light on match with OCR0B and set the light on BOTTOM
+	//clear the light red on match with OCR0B and set the light on BOTTOM
 	RESET(TCCR0A, COM0B0);
 	SET(TCCR0A, COM0B1);
 
@@ -35,7 +35,7 @@ static void _init_timer2()
 	RESET(TCCR2A, COM2A0);
 	RESET(TCCR2A, COM2A1);
 
-	//clear the light on match with OCR2B and set the light on BOTTOM
+	//clear the light blue on match with OCR2B and set the light on BOTTOM
 	RESET(TCCR2A, COM2B0);
 	SET(TCCR2A, COM2B1);
 
@@ -61,6 +61,7 @@ void init_rgb()
 
 void set_rgb(uint8_t r, uint8_t g, uint8_t b)
 {
+	// change value of the duty cycle
 	OCR0B = r;
 	OCR0A = g;
 	OCR2B = b;
@@ -81,6 +82,7 @@ void wheel(uint8_t pos) {
 
 int main()
 {
+	// init led to output
 	SET(DDRD, PD3);
 	SET(DDRD, PD5);
 	SET(DDRD, PD6);
