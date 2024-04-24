@@ -31,6 +31,7 @@ static void _init_switch2()
 	//Activate global interrupt
 	SET(SREG, 7);
 
+	//Activate pin PD4 for interrupt when pin change state
 	SET(PCMSK2, PCINT20);
 	SET(PCICR, PCIE2);
 }
@@ -38,7 +39,7 @@ static void _init_switch2()
 static void _print()
 {
 	char res;
-	res = PORTB & ~MASK_NONE_LED;
+	res = PORTB & ~MASK_NONE_LED; //save info of PORTB before changing LED state
 	res |= (value.value & 1) | (value.value & 2) | (value.value & 4) | ((value.value & 8) << 1);
 	PORTB = res;
 }

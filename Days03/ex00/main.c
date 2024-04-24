@@ -69,6 +69,8 @@ void init_timer()
 ISR(TIMER1_COMPA_vect)
 {
 	uart_tx('Z');
+	uart_tx('\r');
+	uart_tx('\n');
 }
 
 int main()

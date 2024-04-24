@@ -65,9 +65,9 @@ int main()
 	while (1)
 	{
 		unsigned char c = uart_rx();
-		uart_printstr("Receive:");
+		// uart_printstr("Receive:");
 		uart_tx(c);
-		uart_tx('\n');
-		uart_tx('\r');
+		// uart_tx('\n');
+		// uart_tx('\r');
 	}
 }

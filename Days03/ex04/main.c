@@ -57,6 +57,24 @@ void delete_char(uint8_t *nb_error, uint8_t *index)
 	uart_tx('\b');
 }
 
+void win()
+{
+	uint8_t cpt = 0;
+	while (cpt < 10)
+	{
+		TOGGLE(PORTB, PB0);
+		_delay_ms(20);
+		TOGGLE(PORTB, PB1);
+		_delay_ms(20);
+		TOGGLE(PORTB, PB2);
+		_delay_ms(20);
+		TOGGLE(PORTB, PB3);
+		_delay_ms(20);
+		cpt++;
+	}
+	SET(PORTD, PD6);
+}
+
 void handle_enter(uint8_t *nb_error, uint8_t *index, uint8_t *check_username, uint8_t *read_password)
 {
 	uart_tx('\r');
@@ -70,7 +88,10 @@ void handle_enter(uint8_t *nb_error, uint8_t *index, uint8_t *check_username, ui
 		else if (*read_password == 1)
 		{
 			if (*nb_error == 0 && *check_username == 1 && *index + 1 == sizeof(password) / sizeof(char))
-				uart_printstr("Welcome !\r\n");
+			{
+				uart_printstr("Welcome 🥳😜!\r\n");
+				win();
+			}
 			else
 				uart_printstr("Bad combination/password\r\n");
 			RESET(UCSR0B, RXCIE0);
@@ -100,6 +121,11 @@ ISR(USART_RX_vect)
 
 int main()
 {
+	SET(DDRD, PD6);
+	SET(DDRB, PB0);
+	SET(DDRB, PB1);
+	SET(DDRB, PB2);
+	SET(DDRB, PB3);
 	uart_init();
 	if (sizeof(username) / sizeof(char) > 255)
 	{

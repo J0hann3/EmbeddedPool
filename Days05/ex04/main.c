@@ -339,12 +339,12 @@ int main()
 {
 	uart_init();
 
-	char *buffer = calloc((1024 - (DATA * 2)), sizeof(char));
-	if (buffer == NULL)
-	{
-		uart_printstr("Error: malloc failed\r\n");
-		return false;
-	}
+	char buffer[1024];// = calloc((1024 - (DATA * 2)), sizeof(char));
+	// if (buffer == NULL)
+	// {
+	// 	uart_printstr("Error: malloc failed\r\n");
+	// 	return false;
+	// }
 	uint8_t command;
 
 	while(1)

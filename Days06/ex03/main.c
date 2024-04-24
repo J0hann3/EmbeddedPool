@@ -27,7 +27,7 @@ static void _init_timer0()
 	RESET(TCCR0B, CS01);
 	SET(TCCR0B, CS02);
 
-	OCR0A = 255;
+	OCR0A = 0;
 	OCR0B = 0;
 }
 

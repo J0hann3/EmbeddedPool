@@ -1,5 +1,6 @@
 #ifndef UART_H
 # define UART_H
+#include "tool.h"
 
 void uart_init();
 
