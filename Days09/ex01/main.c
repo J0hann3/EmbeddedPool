@@ -57,16 +57,20 @@ int main()
 	send_command(ADDRESS, 0x02, 0b11111111, NONE, 1);
 
 	uint8_t cpt = 0;
+	uint8_t is_press = 0;
 	while(1)
 	{
 		//check the value of the sw3
-		if ((read_value(ADDRESS, 0x00) & (1 << SW3)) == 0)
+		if (is_press == 0 && (read_value(ADDRESS, 0x00) & (1 << SW3)) == 0)
 		{
+			is_press = 1;
 			cpt++;
 			if (cpt == 8)
 				cpt = 0;
 			print_value_led(cpt);
 			_delay_ms(150);
 		}
+		if (is_press == 1 && (read_value(ADDRESS, 0x00) & (1 << SW3)) != 0)
+			is_press = 0;
 	}
 }
