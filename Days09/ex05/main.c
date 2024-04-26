@@ -139,20 +139,16 @@ void print_number(uint16_t nb)
 		start = 1;
 	}
 	nb = nb % 10;
-	if (nb != 0 || start)
-	{
-		print_one_digit(nb, 0b01111111);
-		start = 1;
-	}
+	print_one_digit(nb, 0b01111111);
 }
 
 int main()
 {
-	init_timer();
 	uart_init();
 	i2c_init();
 
 	cpt = 0;
+	init_timer();
 	//set ouput CA4 for the first digit and register2 for the segments
 	send_command(ADDRESS, 0x06, 0b00001111, 0x00, 2);
 	while(1)
