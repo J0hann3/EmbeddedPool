@@ -3,41 +3,53 @@
 #include "adc.h"
 #include "spi.h"
 
-volatile uint16_t counter = 0;
+volatile uint16_t sensor_counter = 0;
+volatile uint16_t reset_sensor_counter = 0;
+volatile uint16_t led_rgb_counter = 0;
+volatile uint16_t reset_led_rgb_counter = 0;
+volatile uint8_t get_date = 0;
+volatile uint16_t counter_start = 0;
 
 void init()
 {
 	spi_init();
+	spi_set_led(0, 0, 0, 0, RESET_LED);
+	spi_disable();
 	uart_init();
 	init_timer();
 	i2c_init();
 
-	//TODO reset rgb leds
-
 	//configure led D9, D10, D11 + 7-segments for output + sw3 input
 	i2c_exp_send_command(ADDRESS, 0x06, 0b00000001, 0, 2);
+
+	mode_6();
 	//reset value to off
 	i2c_exp_send_command(ADDRESS, 0x02, 0b11111111, 0xff, 2);
 
-	spi_set_led(0, 0, 0, 0, RESET_LED);
 
-	//set led D1-D4 in output
+	//set led D1-D4 in output and rgb led
 	SET(DDRB, PB0);
 	SET(DDRB, PB1);
 	SET(DDRB, PB2);
 	SET(DDRB, PB4);
+	SET(DDRD, PD3);
+	SET(DDRD, PD5);
+	SET(DDRD, PD6);
 
-	// set light off for led D1-D4
+	// set light off for led D1-D4 and rgb led
 	RESET(PORTB, PB0);
 	RESET(PORTB, PB1);
 	RESET(PORTB, PB2);
 	RESET(PORTB, PB4);
+	RESET(PORTD, PD3);
+	RESET(PORTD, PD5);
+	RESET(PORTD, PD6);
 
 	//set SW1 SW2 in input
 	RESET(DDRD, PD2);
 	RESET(DDRD, PD4);
+	sei();
 
-	mode_6();
 }
 
 uint8_t check_button_press(uint8_t button_state, int8_t *mode)
@@ -117,6 +129,15 @@ void exec_mode(uint8_t mode)
 		case 8:
 			mode_8();
 			break;
+		case 9:
+			mode_9();
+			break;
+		case 10:
+			mode_10();
+			break;
+		case 11:
+			mode_11();
+			break;
 	}
 }
 
@@ -127,16 +148,46 @@ void print_mode_binary(int8_t value)
 	PORTB = res;
 }
 
+void start_mode(uint8_t *start)
+{
+	if (counter_start > 4000 / 5)
+		*start = 0;
+	else if (counter_start > 3000 / 5)
+	{
+		i2c_exp_send_command(ADDRESS, 0x02, 0b11111111, 0xff, 2);
+		RESET(PORTB, PB0);
+		RESET(PORTB, PB1);
+		RESET(PORTB, PB2);
+		RESET(PORTB, PB4);
+	}
+	else
+	{
+		i2c_exp_print_number(8888);
+		SET(PORTB, PB0);
+		SET(PORTB, PB1);
+		SET(PORTB, PB2);
+		SET(PORTB, PB4);
+	}
+}
+
 int main()
 {
+	uint8_t start = 1;
 	uint8_t button_state = 0;
 	int8_t mode = 0;
 	init();
 
 	while(1)
 	{
+		if (get_date == 1)
+			update_date();
 		button_state = check_button_press(button_state, &mode);
-		print_mode_binary(mode);
-		exec_mode(mode);
+		if (start)
+			start_mode(&start);
+		else
+		{
+			print_mode_binary(mode);
+			exec_mode(mode);
+		}
 	}
 }

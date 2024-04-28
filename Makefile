@@ -12,7 +12,8 @@ SRC=main.c \
 	adc.c \
 	mode.c \
 	spi.c \
-	timer.c
+	timer.c \
+	rtc.c
 
 OBJ=$(SRC:.c=.o)
 

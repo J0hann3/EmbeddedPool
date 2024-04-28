@@ -31,7 +31,7 @@ void uart_init()
 	// Activated receive
 	SET(UCSR0B, RXEN0);
 	//Activated interrupt on receive
-	// SET(UCSR0B, RXCIE0);
+	SET(UCSR0B, RXCIE0);
 }
 
 // received

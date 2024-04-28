@@ -15,6 +15,11 @@ void spi_init()
 	 */
 }
 
+void spi_disable()
+{
+	RESET(SPCR, SPE);
+}
+
 void spi_write(uint8_t data)
 {
 	SPDR = data;
@@ -46,17 +51,17 @@ void spi_set_led_rgb(uint8_t red, uint8_t green, uint8_t blue, uint8_t lum)
 void spi_set_led(uint8_t red, uint8_t green, uint8_t blue, uint8_t lum, uint8_t led)
 {
 	spi_send_start();
-	if (led == LED_D6)
+	if (led == LED_D6 || led == ALL_LED)
 		spi_set_led_rgb(red, green, blue, lum);
 	else
 		spi_set_led_rgb(0, 0, 0, 0);
 	
-	if (led == LED_D7)
+	if (led == LED_D7 || led == ALL_LED)
 		spi_set_led_rgb(red, green, blue, lum);
 	else
 		spi_set_led_rgb(0, 0, 0, 0);
 	
-	if (led == LED_D8)
+	if (led == LED_D8 || led == ALL_LED)
 		spi_set_led_rgb(red, green, blue, lum);
 	else
 		spi_set_led_rgb(0, 0, 0, 0);

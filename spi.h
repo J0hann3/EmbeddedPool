@@ -10,6 +10,7 @@
 #define LED_D7 1
 #define LED_D8 2
 #define RESET_LED 3
+#define ALL_LED 4
 
 #define RED 0
 #define GREEN 1
@@ -24,6 +25,7 @@ typedef struct
 } color_t;
 
 void spi_init();
+void spi_disable();
 // void spi_write(uint8_t data);
 void spi_send_start();
 void spi_send_end();

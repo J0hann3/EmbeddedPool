@@ -97,12 +97,14 @@ void i2c_exp_print_number(uint16_t nb)
 
 void i2c_exp_print_float(float nb)
 {
-	uart_printdec(nb);
-	uart_printstr("\r\n");
 	if (nb < 0)
 		i2c_exp_print_one_digit('-', DIGIT_1, 0);
-	// else
-	// i2c_exp_print_one_digit(nb / 10, DIGIT_2, 0);
+	else if ((uint32_t)nb / 100 != 0)
+	{
+		uart_printstr("test\r\n");
+		i2c_exp_print_one_digit(nb / 100, DIGIT_2, 0);
+		nb = nb / 100;
+	}
 
 	i2c_exp_print_one_digit(nb / 10, DIGIT_2, 0);
 	i2c_exp_print_one_digit((uint32_t)nb % 10, DIGIT_3, 1);
